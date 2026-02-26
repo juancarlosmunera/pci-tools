@@ -1,8 +1,8 @@
-# PCI DSS Evidence Collection Toolkit
+# PCI DSS Toolkit
 
-A collection of scripts for sysadmins and firewall administrators to pull
+A collection of useful scripts for both assessors and sysadmins to pull
 configuration evidence from network devices, operating systems, and cloud
-environments. Output is formatted for review by a PCI DSS assessor.
+environments. Output is formatted for review by a PCI DSS internal or external assessor.
 
 All scripts are **read-only**. They connect to devices or APIs, export
 configuration data, and save it locally. No changes are made to any system.
