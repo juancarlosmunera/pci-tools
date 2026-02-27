@@ -75,47 +75,82 @@ Scripts available for: **Python** | **PowerShell**
 
 ---
 
-#### Cisco *(Coming Soon)*
+#### Cisco
 
-Will export Cisco firewall and router configurations, including:
+Connects to a Cisco device over SSH using the Posh-SSH PowerShell module and
+exports the running configuration and key show command outputs for assessor
+review. Supports three device types selected at runtime:
 
-- Running configuration
-- Access Control Lists (ACLs) with full rule detail
-- Interface assignments and security levels
-- NAT rules and routing tables
-- Network object and object-group definitions
+**IOS / IOS-XE** (routers and switches):
+- Full running configuration
+- IP Access Control Lists (ACLs) with hit counts
+- IP routing table
+- Interfaces (full detail and summary)
+- VLAN database and spanning tree configuration
+- Logging settings and NTP status
 
-Planned support for: **IOS / IOS-XE** | **ASA** | **Firepower**
+**ASA** (firewall):
+- Full running configuration
+- Access lists with hit counts
+- Routing table
+- Interfaces with names and security levels
+- Network objects, object-groups, and NAT rules
+- Logging settings and NTP configuration
+
+All device types also export device version and model info, currently
+logged-in users, and a MANIFEST for chain-of-custody documentation.
+
+Scripts available for: **PowerShell** (requires Posh-SSH module)
 
 ---
 
 ### Cloud Network Security
 
-#### Microsoft Azure *(Coming Soon)*
+#### Microsoft Azure
 
-Will export Azure network security configuration relevant to PCI DSS,
-including:
+Connects to an Azure subscription using the Az PowerShell module and exports
+network security configuration across all resource groups and regions in the
+subscription. Supports both interactive browser login and Service Principal
+(non-interactive) authentication.
 
-- Network Security Group (NSG) rules — inbound and outbound, per rule with
-  source, destination, protocol, port, and priority
-- NSG-to-subnet and NSG-to-NIC associations
-- Azure Firewall policies and rules (if in use)
-- Virtual Network topology and subnet definitions
-- Application Security Groups
+- Network Security Group rules — inbound and outbound, custom and Azure
+  default rules, sorted by direction then priority (the order Azure evaluates
+  them), with source, destination, protocol, port range, and allow/deny action
+- NSG-to-subnet and NSG-to-NIC associations embedded in each NSG entry
+- Virtual Network topology — VNet address spaces, all subnets with their CIDR
+  blocks, and per-subnet NSG and route table associations
+- VNet peering connections (embedded in VNet export)
+- Route tables with full route entries and next-hop details
+- VPN and ExpressRoute gateways and connections
+- Application Security Groups (for resolving ASG references in NSG rules)
+- Azure Firewall instances, policies, and policy rule collection groups
+  (application, network, and DNAT rules) — exported if deployed, documented
+  as not deployed if absent
+
+Scripts available for: **PowerShell**
 
 ---
 
-#### Amazon Web Services *(Coming Soon)*
+#### Amazon Web Services
 
-Will export AWS network security configuration relevant to PCI DSS,
-including:
+Connects to an AWS account using the AWS Tools for PowerShell and exports
+network security configuration for a specified region. Supports access key
+authentication, named AWS profiles, and the default credential chain (instance
+roles, environment variables).
 
-- Security Group rules — inbound and outbound, per group with protocol,
-  port range, and CIDR or source group references
-- Network ACL (NACL) rules — per subnet association with allow/deny rules
-  in priority order
-- VPC structure, subnet definitions, and route tables
-- AWS Network Firewall policies and stateless/stateful rule groups (if in use)
+- Security Group rules — inbound and outbound for all groups, with protocol,
+  port range, CIDR block, and cross-security-group references
+- Network ACL rules — all NACLs with subnet associations, rules sorted in
+  evaluation priority order (lowest rule number first), with allow/deny action
+  and direction
+- VPC structure — VPC definitions, all subnets with availability zone and
+  CIDR, route tables with full route entries and subnet associations
+- Internet gateways, NAT gateways, and VPC peering connections
+- AWS Network Firewall instances, policies, and stateless/stateful rule groups
+  (5-tuple rules, Suricata IDS rules, domain lists) — exported if deployed,
+  documented as not deployed if absent
+
+Scripts available for: **PowerShell**
 
 ---
 
