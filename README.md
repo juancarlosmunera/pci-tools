@@ -189,19 +189,34 @@ and access control reviews, including:
 
 ### Cloud Service Providers
 
-#### Amazon Web Services *(Coming Soon)*
+#### Amazon Web Services
 
-Will export AWS account-level configuration relevant to PCI DSS identity,
-access, and logging controls, including:
+Connects to an AWS account and exports identity, access, and logging
+configuration for PCI DSS control review. Operates at the account level
+for global services (IAM, S3, CloudTrail) and at the specified region
+for regional services (Config, GuardDuty, Security Hub). Run once per
+region where regional services are active.
 
-- IAM users, groups, roles, and policy attachments
-- IAM password policy
-- MFA enrollment status per user
-- Access key age and last-used dates
-- CloudTrail configuration and status (all regions)
-- S3 bucket policies and public access settings
-- AWS Config rules and compliance status
-- GuardDuty and Security Hub findings summary
+- IAM credential report — the primary evidence file: every IAM user with
+  MFA enrollment status, password last used, access key ages, and access
+  key last-used dates, exported as a CSV ready to open in Excel
+- IAM password policy with all complexity, length, history, and expiry settings
+- IAM users with group memberships and attached managed and inline policies
+- IAM groups and roles with trust policies and policy attachments
+- MFA device inventory across all users
+- CloudTrail trail configuration and active logging status for all trails
+  in the account (including multi-region trails), with log file validation
+  and S3 delivery target per trail
+- S3 bucket inventory with public access block configuration, bucket policy,
+  AWS public-status evaluation, access logging target, and versioning
+  per bucket — identifies any bucket with public exposure
+- AWS Config recorder status, all configured rules, and per-rule compliance
+  results showing which resources are NON_COMPLIANT
+- GuardDuty detector settings and all active findings (if enabled)
+- Security Hub enabled compliance standards (including PCI DSS) and all
+  active FAILED findings mapped to PCI DSS requirements (if enabled)
+
+Scripts available for: **PowerShell**
 
 ---
 
