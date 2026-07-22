@@ -246,14 +246,14 @@ deleted once the assessment is complete.
 running the script. No data is sent anywhere else. Copy the output folder to
 a secure location and share it with your assessor through an approved channel.
 
-**SSL certificates**: Network devices commonly use self-signed certificates.
+**TLS certificates**: Network devices commonly use self-signed certificates.
 All scripts are configured to bypass certificate validation by default. This
 is expected behavior and does not indicate a security issue with the export.
 
 **What to do with the output**: Hand the entire timestamped output folder to
 your PCI assessor. Do not modify or delete any files from the folder. Each
 folder includes a MANIFEST file that lists all exported files and timestamps
-for chain-of-custody purposes.
+for chain-of-custody purposes.  New version will have a hash value for integrity purposes.
 
 **After the assessment**: Delete or securely archive all output folders. They
 contain full device configurations which are sensitive. Revoke or disable any
