@@ -156,18 +156,39 @@ Scripts available for: **PowerShell**
 
 ### Operating Systems
 
-#### Windows *(Coming Soon)*
+#### Windows
 
-Will export Windows host configuration relevant to PCI DSS system hardening
-and access control reviews, including:
+Exports Windows operating system configuration relevant to PCI DSS system
+hardening, access control, and logging reviews. Runs against the local machine,
+or against a list of remote hosts (one hostname per line in a text file) over
+PowerShell Remoting from a single admin workstation — no need to log on to each
+server. Uses only built-in Windows tooling — no external modules to install.
+Covers:
 
-- Local user accounts and group memberships
-- Password policy and account lockout policy
-- Audit policy settings
-- Windows Firewall rules (inbound and outbound)
-- Installed software and patch levels
-- Running services and their configurations
-- Registry keys relevant to security hardening benchmarks
+- Local user accounts with password and last-logon metadata, and local group
+  memberships (including Administrators)
+- Password policy and account lockout policy (`net accounts` and `secedit`)
+- Security policy and user rights assignments (full `secedit` export)
+- Audit policy settings (`auditpol`) and event log retention configuration
+- Windows Firewall profiles (enabled state, default actions) and all rules,
+  inbound and outbound
+- Installed software, applied patches/hotfixes, and Windows Update configuration
+- Services with start mode and run-as account, scheduled tasks, and startup items
+- Security hardening registry keys (SMBv1, RDP/NLA, UAC, LSA/NTLM, autorun,
+  inactivity lock) shown as current value vs. recommended value
+- Microsoft Defender / antivirus status and BitLocker disk encryption status
+- Listening network ports, SMB shares, and time synchronization (`w32tm`)
+- Group Policy result (effective policy) for domain-joined hosts
+
+Each host gets its own timestamped evidence folder under a single run folder.
+Every exported file is hashed with SHA-256, and each host folder carries its own
+MANIFEST recording the collection date, the account used on the target, the
+workstation that retrieved and hashed the bundle, and each file's integrity
+hash. A separate `checksums.sha256` file allows independent verification. Output
+is a mix of JSON, CSV (Excel-ready), and plain text.
+
+Scripts available for: **PowerShell** (local run as Administrator, or remote via
+PowerShell Remoting)
 
 ---
 
