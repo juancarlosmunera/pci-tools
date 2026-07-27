@@ -14,6 +14,10 @@
     All output is saved to a timestamped folder as JSON files readable in
     VS Code or Notepad++ on Windows. No changes are made to Azure.
 
+    Every exported file is hashed with SHA-256 and recorded in MANIFEST.txt for
+    chain-of-custody and integrity verification, alongside a checksums.sha256
+    file that can be verified independently.
+
     Compatible with Windows PowerShell 5.1 and PowerShell 7+.
 
 .NOTES
@@ -303,35 +307,62 @@ if ($firewallList.Count -eq 0) {
 }
 
 # ==============================================================================
-# 5. MANIFEST
+# 5. MANIFEST + SHA-256 INTEGRITY HASHES
+# Every exported file is hashed with SHA-256 and recorded in MANIFEST.txt for
+# chain-of-custody, plus checksums.sha256 for independent verification.
 # ==============================================================================
 Write-Host ""
+Write-Host -NoNewline "  Hashing evidence (SHA-256) + manifest...".PadRight(48)
 
 $manifestPath = Join-Path $ExportDir "MANIFEST.txt"
-$files        = Get-ChildItem $ExportDir |
-                    Where-Object { $_.Name -ne "MANIFEST.txt" } |
+$checksumPath = Join-Path $ExportDir "checksums.sha256"
+$files        = Get-ChildItem $ExportDir -File |
+                    Where-Object { $_.Name -ne "MANIFEST.txt" -and $_.Name -ne "checksums.sha256" } |
                     Sort-Object Name
+
+$hashes = foreach ($f in $files) {
+    $h = Get-FileHash -Path $f.FullName -Algorithm SHA256
+    [PSCustomObject]@{ Name = $f.Name; SizeKB = [math]::Round($f.Length / 1KB, 1); SHA256 = $h.Hash }
+}
+
+# One "<hash> *<file>" line per file — the format understood by sha256sum -c
+$hashes | ForEach-Object { "{0} *{1}" -f $_.SHA256, $_.Name } |
+    Out-File -FilePath $checksumPath -Encoding ASCII
 
 $manifestLines = @(
     "Azure Network Security Export Manifest"
-    "Subscription : $SubName"
-    "Sub ID       : $SubId"
-    "Tenant ID    : $TenantName"
-    "Exported     : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-    "Host         : $env:COMPUTERNAME"
-    "User         : $env:USERNAME"
+    "====================================="
+    "Subscription   : $SubName"
+    "Sub ID         : $SubId"
+    "Tenant ID      : $TenantName"
+    "Exported       : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    "Hashed (UTC)   : $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')) UTC"
+    "Host           : $env:COMPUTERNAME"
+    "User           : $env:USERNAME"
+    "Hash algorithm : SHA-256"
     ""
-    "Files:"
+    "Files and integrity hashes:"
+    ""
 )
-foreach ($f in $files) {
-    $sizeKB = [math]::Round($f.Length / 1KB, 1)
-    $manifestLines += "  {0,-52} {1} KB" -f $f.Name, $sizeKB
+foreach ($h in $hashes) {
+    $manifestLines += ("  {0}" -f $h.Name)
+    $manifestLines += ("      Size   : {0} KB" -f $h.SizeKB)
+    $manifestLines += ("      SHA-256: {0}" -f $h.SHA256)
+    $manifestLines += ""
 }
+$manifestLines += "checksums.sha256 lists all hashes in a format verifiable with:"
+$manifestLines += "  Windows : certutil -hashfile <file> SHA256"
+$manifestLines += "  Linux   : sha256sum -c checksums.sha256"
 $manifestLines | Out-File -FilePath $manifestPath -Encoding UTF8
+
+Write-Host " OK ($(@($hashes).Count) files)"
 
 Write-Host "========================================"
 Write-Host "  Export complete."
 Write-Host "  Files saved to: $ExportDir"
+Write-Host ""
+Write-Host "  MANIFEST.txt records a SHA-256 hash of every file."
+Write-Host "  checksums.sha256 can be verified with: sha256sum -c checksums.sha256"
 Write-Host ""
 Write-Host "  For assessor review:"
 Write-Host "  - Open .json files in VS Code or Notepad++"

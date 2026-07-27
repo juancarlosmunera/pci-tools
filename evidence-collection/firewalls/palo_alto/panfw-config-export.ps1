@@ -7,6 +7,10 @@
     running configuration as a date-stamped XML file. Intended for use by a
     sysadmin to collect evidence for a PCI DSS assessment.
 
+    The exported file is hashed with SHA-256 and recorded in a date-stamped
+    MANIFEST for chain-of-custody and integrity verification, alongside a
+    .sha256 checksum file for independent verification.
+
     Compatible with Windows PowerShell 5.1 and PowerShell 7+.
 
 .NOTES
@@ -93,3 +97,41 @@ try {
 }
 
 Write-Host "Configuration saved to: $outFile"
+
+# ---------------------------------------------------------------------------
+# MANIFEST + SHA-256 INTEGRITY HASH
+# The manifest and checksum file are date-stamped to match the export, so a
+# re-run never overwrites the integrity record of a previous collection.
+# ---------------------------------------------------------------------------
+$hash         = Get-FileHash -Path $outFile -Algorithm SHA256
+$sizeKB       = [math]::Round((Get-Item $outFile).Length / 1KB, 1)
+$fileName     = Split-Path $outFile -Leaf
+$checksumPath = Join-Path $ConfigDir "$fileName.sha256"
+$manifestPath = Join-Path $ConfigDir "pa-$datestamp-MANIFEST.txt"
+
+# "<hash> *<file>" — the format understood by sha256sum -c
+"{0} *{1}" -f $hash.Hash, $fileName | Out-File -FilePath $checksumPath -Encoding ASCII
+
+@(
+    "Palo Alto Configuration Export Manifest (PCI DSS)"
+    "================================================"
+    "Firewall       : $PA_HOST"
+    "Exported       : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    "Hashed (UTC)   : $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')) UTC"
+    "Host           : $env:COMPUTERNAME"
+    "User           : $env:USERNAME"
+    "Hash algorithm : SHA-256"
+    ""
+    "Files and integrity hashes:"
+    ""
+    "  $fileName"
+    "      Size   : $sizeKB KB"
+    "      SHA-256: $($hash.Hash)"
+    ""
+    "$fileName.sha256 holds the same hash in a format verifiable with:"
+    "  Windows : certutil -hashfile $fileName SHA256"
+    "  Linux   : sha256sum -c $fileName.sha256"
+) | Out-File -FilePath $manifestPath -Encoding UTF8
+
+Write-Host "SHA-256 : $($hash.Hash)"
+Write-Host "Manifest saved to: $manifestPath"

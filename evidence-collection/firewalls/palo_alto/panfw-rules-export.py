@@ -2,6 +2,11 @@ import requests
 import xml.etree.ElementTree as ET
 import json
 import csv
+import hashlib
+import os
+import socket
+import getpass
+from datetime import datetime, timezone
 from openpyxl import Workbook
 import sys
 
@@ -19,6 +24,10 @@ DEVICE_GROUP = "DG-NAME"   # None for standalone firewall
 JSON_OUT = "audit_rules.json"
 CSV_OUT = "audit_rules.csv"
 XLSX_OUT = "audit_rules.xlsx"
+
+# Chain-of-custody records written alongside the exports above
+MANIFEST_OUT = "MANIFEST.txt"
+CHECKSUM_OUT = "checksums.sha256"
 
 requests.packages.urllib3.disable_warnings()
 
@@ -95,6 +104,62 @@ def normalize_addresses(addrs):
 
 def normalize_groups(groups):
     return {g["@name"]: g.get("members", []) for g in groups}
+
+
+# ==========================
+# INTEGRITY
+# ==========================
+def sha256_file(path):
+    """SHA-256 of a file, read in chunks so large exports don't load into RAM"""
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def write_manifest(files, rule_count):
+    """Hash every export and record it in MANIFEST.txt + checksums.sha256"""
+    hashes = [
+        (os.path.basename(p), os.path.getsize(p) / 1024, sha256_file(p))
+        for p in files if os.path.exists(p)
+    ]
+
+    # "<hash> *<file>" — the format understood by sha256sum -c
+    with open(CHECKSUM_OUT, "w") as f:
+        for name, _size, digest in hashes:
+            f.write(f"{digest} *{name}\n")
+
+    lines = [
+        "Palo Alto Rulebase Export Manifest (PCI DSS)",
+        "===========================================",
+        f"Firewall       : {HOST}",
+        f"Device group   : {DEVICE_GROUP or '(standalone firewall)'}",
+        f"PAN-OS API     : {PANOS_VERSION}",
+        f"Rules exported : {rule_count}",
+        f"Exported       : {datetime.now():%Y-%m-%d %H:%M:%S}",
+        f"Hashed (UTC)   : {datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S} UTC",
+        f"Host           : {socket.gethostname()}",
+        f"User           : {getpass.getuser()}",
+        "Hash algorithm : SHA-256",
+        "",
+        "Files and integrity hashes:",
+        "",
+    ]
+    for name, size_kb, digest in hashes:
+        lines += [f"  {name}", f"      Size   : {size_kb:.1f} KB",
+                  f"      SHA-256: {digest}", ""]
+    lines += [
+        f"{CHECKSUM_OUT} lists all hashes in a format verifiable with:",
+        f"  Linux   : sha256sum -c {CHECKSUM_OUT}",
+        "  Windows : certutil -hashfile <file> SHA256",
+        "",
+    ]
+
+    with open(MANIFEST_OUT, "w") as f:
+        f.write("\n".join(lines))
+
+    return hashes
 
 
 # ==========================
@@ -206,4 +271,10 @@ def main():
         ws.append(r)
     wb.save(XLSX_OUT)
 
+    # MANIFEST + SHA-256 integrity hashes for chain-of-custody
+    hashes = write_manifest([JSON_OUT, CSV_OUT, XLSX_OUT], len(json_rules))
+
     print("Audit export complete")
+    for name, _size, digest in hashes:
+        print(f"  {name:<20} SHA-256: {digest}")
+    print(f"Manifest written to {MANIFEST_OUT} ({CHECKSUM_OUT} for verification)")

@@ -85,6 +85,35 @@ OUTPUT
   The file contains the full PAN-OS running configuration. Hand this file to
   your PCI assessor.
 
+  Two chain-of-custody files are written alongside it:
+
+    pa-YYYYMMDD-MANIFEST.txt      Firewall address, export timestamp (local and
+                                  UTC), host, user, and the SHA-256 hash and
+                                  size of the exported config.
+
+    pa-YYYYMMDD.xml.sha256        The same hash in the standard
+                                  "<hash> *<filename>" format.
+
+  Both are date-stamped to match the export, so re-running the script never
+  overwrites the integrity record of a previous collection.
+
+
+VERIFYING EVIDENCE INTEGRITY
+----------------------------
+The assessor (or anyone) can confirm the config has not been altered since
+collection:
+
+  Verify the hash matches the MANIFEST:
+    Windows : certutil -hashfile pa-YYYYMMDD.xml SHA256
+    PowerShell: Get-FileHash pa-YYYYMMDD.xml -Algorithm SHA256
+
+  Verify against the checksum file:
+    Linux/macOS : sha256sum -c pa-YYYYMMDD.xml.sha256
+    (run from inside the folder set in $ConfigDir)
+
+If the hash does not match, the file was modified after collection — do not
+rely on it; re-run the export against the firewall.
+
 
 EXECUTION POLICY — QUICK EXPLANATION
 --------------------------------------

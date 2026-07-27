@@ -7,6 +7,10 @@
 #
 # Output is a timestamped folder you can zip and hand to an assessor.
 # All files open directly in VS Code or Notepad++ on Windows.
+#
+# Every exported file is hashed with SHA-256 and recorded in MANIFEST.txt for
+# chain-of-custody, alongside a checksums.sha256 file verifiable with
+# "sha256sum -c checksums.sha256".
 
 # ==============================================================================
 # CONFIG — update these before running
@@ -122,23 +126,71 @@ cmdb_get "/cmdb/log/syslogd/setting"      "logging-syslog.json"       "Syslog se
 cmdb_get "/cmdb/system/ntp"               "ntp.json"                  "NTP settings"
 
 # ==============================================================================
-# 3. MANIFEST — list all exported files with sizes for chain-of-custody
+# 3. MANIFEST + SHA-256 INTEGRITY HASHES — chain-of-custody record
+# Every exported file is hashed with SHA-256 and recorded in MANIFEST.txt,
+# plus checksums.sha256 for independent verification.
 # ==============================================================================
 echo ""
+printf "  %-35s" "Hashing evidence (SHA-256)..."
+
 MANIFEST="${EXPORT_DIR}/MANIFEST.txt"
+CHECKSUMS="${EXPORT_DIR}/checksums.sha256"
+
+# sha256sum on Linux, shasum -a 256 on macOS/BSD
+if command -v sha256sum >/dev/null 2>&1; then
+    HASH_CMD="sha256sum"
+else
+    HASH_CMD="shasum -a 256"
+fi
+
+# Hash every exported file (relative names, so checksums.sha256 verifies
+# from inside the export folder regardless of where it is later copied).
+(
+    cd "${EXPORT_DIR}" || exit 1
+    for f in *; do
+        [ -f "$f" ] || continue
+        case "$f" in MANIFEST.txt|checksums.sha256) continue ;; esac
+        ${HASH_CMD} "$f"
+    done | sort -k2
+) > "${CHECKSUMS}"
+
+FILE_COUNT=$(wc -l < "${CHECKSUMS}")
+
 {
     echo "FortiGate Export Manifest"
-    echo "Target   : ${FORTIGATE_IP}"
-    echo "VDOM     : ${VDOM}"
-    echo "Exported : $(date)"
+    echo "========================="
+    echo "Target         : ${FORTIGATE_IP}"
+    echo "VDOM           : ${VDOM}"
+    echo "Exported       : $(date)"
+    echo "Hashed (UTC)   : $(date -u '+%Y-%m-%d %H:%M:%S') UTC"
+    echo "Host           : $(hostname)"
+    echo "User           : $(id -un)"
+    echo "Hash algorithm : SHA-256"
     echo ""
-    echo "Files:"
-    ls -lh "${EXPORT_DIR}" | awk 'NR>1 {printf "  %-45s %s\n", $NF, $5}'
+    echo "Files and integrity hashes:"
+    echo ""
+    while read -r hash name; do
+        name="${name#\*}"
+        size_kb=$(awk -v b="$(wc -c < "${EXPORT_DIR}/${name}")" 'BEGIN {printf "%.1f", b/1024}')
+        echo "  ${name}"
+        echo "      Size   : ${size_kb} KB"
+        echo "      SHA-256: ${hash}"
+        echo ""
+    done < "${CHECKSUMS}"
+    echo "checksums.sha256 lists all hashes in a format verifiable with:"
+    echo "  Linux   : sha256sum -c checksums.sha256"
+    echo "  macOS   : shasum -a 256 -c checksums.sha256"
+    echo "  Windows : certutil -hashfile <file> SHA256"
 } > "${MANIFEST}"
+
+echo "OK (${FILE_COUNT} files)"
 
 echo "========================================"
 echo "  Export complete."
 echo "  Files saved to: ${EXPORT_DIR}"
+echo ""
+echo "  MANIFEST.txt records a SHA-256 hash of every file."
+echo "  Verify with: cd ${EXPORT_DIR} && sha256sum -c checksums.sha256"
 echo ""
 echo "  For Windows review:"
 echo "  - Copy the entire folder to a USB or network share"

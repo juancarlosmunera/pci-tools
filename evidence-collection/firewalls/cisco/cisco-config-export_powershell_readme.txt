@@ -212,9 +212,29 @@ ntp-associations.txt          PCI time synchronization controls review.
 logged-in-users.txt           Users currently logged in to the device via console,
                               telnet, or SSH. Contextual info for the assessor.
 
-MANIFEST.txt                  List of all files with sizes, export timestamp, the
-                              machine and user account that ran the script. Useful
-                              for chain-of-custody documentation.
+MANIFEST.txt                  Chain-of-custody record: export timestamp (local and
+                              UTC), the machine and user account that ran the script,
+                              and the SHA-256 hash and size of every file.
+
+checksums.sha256              SHA-256 hash of every exported file, in the standard
+                              "<hash> *<filename>" format for bulk verification.
+
+
+VERIFYING EVIDENCE INTEGRITY
+----------------------------
+The assessor (or anyone) can confirm the files have not been altered since
+collection using the hashes in the MANIFEST or checksums.sha256:
+
+  Verify a single file's hash matches the MANIFEST:
+    Windows : certutil -hashfile running-config.txt SHA256
+    PowerShell: Get-FileHash running-config.txt -Algorithm SHA256
+
+  Verify all files at once against checksums.sha256:
+    Linux/macOS : sha256sum -c checksums.sha256
+    (run from inside the export folder)
+
+If any hash does not match, the file was modified after collection — do not
+rely on it; re-run the export against the device.
 
 
 HOW TO REVIEW THE FILES ON WINDOWS

@@ -266,8 +266,29 @@ nfw-rule-groups.json          Full rule group content for all groups:
 nfw-not-deployed.json         Written when no Network Firewall is found. Confirms
                               the check was run — absence of firewall is documented.
 
-MANIFEST.txt                  Account ID, region, export timestamp, machine name,
-                              and file list with sizes. For chain-of-custody records.
+MANIFEST.txt                  Chain-of-custody record: account ID, region, export
+                              timestamp (local and UTC), machine name, user, and the
+                              SHA-256 hash and size of every file.
+
+checksums.sha256              SHA-256 hash of every exported file, in the standard
+                              "<hash> *<filename>" format for bulk verification.
+
+
+VERIFYING EVIDENCE INTEGRITY
+----------------------------
+The assessor (or anyone) can confirm the files have not been altered since
+collection using the hashes in the MANIFEST or checksums.sha256:
+
+  Verify a single file's hash matches the MANIFEST:
+    Windows : certutil -hashfile security-groups.json SHA256
+    PowerShell: Get-FileHash security-groups.json -Algorithm SHA256
+
+  Verify all files at once against checksums.sha256:
+    Linux/macOS : sha256sum -c checksums.sha256
+    (run from inside the export folder)
+
+If any hash does not match, the file was modified after collection — do not
+rely on it; re-run the export against the source account.
 
 
 HOW TO REVIEW THE FILES ON WINDOWS

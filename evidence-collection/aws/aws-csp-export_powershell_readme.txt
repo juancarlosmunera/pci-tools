@@ -361,8 +361,29 @@ securityhub-findings.json         Active FAILED findings from all enabled standa
 *-not-enabled.json                Written when GuardDuty or Security Hub is not enabled
                                   in the specified region. Documents that the check ran.
 
-MANIFEST.txt                      Account ID, region, timestamp, host, user, and file
-                                  list with sizes. For chain-of-custody records.
+MANIFEST.txt                      Chain-of-custody record: account ID, region, export
+                                  timestamp (local and UTC), host, user, and the
+                                  SHA-256 hash and size of every file.
+
+checksums.sha256                  SHA-256 hash of every exported file, in the standard
+                                  "<hash> *<filename>" format for bulk verification.
+
+
+VERIFYING EVIDENCE INTEGRITY
+----------------------------
+The assessor (or anyone) can confirm the files have not been altered since
+collection using the hashes in the MANIFEST or checksums.sha256:
+
+  Verify a single file's hash matches the MANIFEST:
+    Windows : certutil -hashfile iam-credential-report.csv SHA256
+    PowerShell: Get-FileHash iam-credential-report.csv -Algorithm SHA256
+
+  Verify all files at once against checksums.sha256:
+    Linux/macOS : sha256sum -c checksums.sha256
+    (run from inside the export folder)
+
+If any hash does not match, the file was modified after collection — do not
+rely on it; re-run the export against the source account.
 
 
 HOW TO REVIEW THE FILES ON WINDOWS

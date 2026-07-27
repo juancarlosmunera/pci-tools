@@ -63,8 +63,9 @@ RUNNING THE SCRIPT
   3. Run:
        python3 panfw-config-export.py
 
-  On success you will see no output. A file named pa-YYYYMMDD.xml will be
-  created in your CONFIG_DIR (e.g., pa-20260225.xml).
+  On success the script prints the file path, the SHA-256 hash of the exported
+  config, and the manifest path. A file named pa-YYYYMMDD.xml is created in your
+  CONFIG_DIR (e.g., pa-20260225.xml).
 
 
 OUTPUT
@@ -75,6 +76,35 @@ OUTPUT
 
   The file contains the full PAN-OS running configuration. Hand this file to
   your PCI assessor.
+
+  Two chain-of-custody files are written alongside it:
+
+    pa-YYYYMMDD-MANIFEST.txt      Firewall address, export timestamp (local and
+                                  UTC), host, user, and the SHA-256 hash and
+                                  size of the exported config.
+
+    pa-YYYYMMDD.xml.sha256        The same hash in the standard
+                                  "<hash> *<filename>" format.
+
+  Both are date-stamped to match the export, so re-running the script never
+  overwrites the integrity record of a previous collection.
+
+
+VERIFYING EVIDENCE INTEGRITY
+----------------------------
+The assessor (or anyone) can confirm the config has not been altered since
+collection:
+
+  Verify against the checksum file:
+    Linux/macOS : sha256sum -c pa-YYYYMMDD.xml.sha256
+    (run from inside the folder set in CONFIG_DIR)
+
+  Verify a single file's hash matches the MANIFEST:
+    Linux/macOS : sha256sum pa-YYYYMMDD.xml
+    Windows     : certutil -hashfile pa-YYYYMMDD.xml SHA256
+
+If the hash does not match, the file was modified after collection — do not
+rely on it; re-run the export against the firewall.
 
 
 TROUBLESHOOTING

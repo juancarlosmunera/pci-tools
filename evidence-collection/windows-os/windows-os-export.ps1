@@ -515,7 +515,7 @@ function Write-ManifestAndHashes {
     }
 
     $checksumPath = Join-Path $Folder "checksums.sha256"
-    (foreach ($h in $hashes) { "{0} *{1}" -f $h.SHA256, $h.Name }) | Out-File -FilePath $checksumPath -Encoding ASCII
+    $hashes | ForEach-Object { "{0} *{1}" -f $_.SHA256, $_.Name } | Out-File -FilePath $checksumPath -Encoding ASCII
 
     $manifestPath = Join-Path $Folder "MANIFEST.txt"
     $lines = @(

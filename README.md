@@ -98,7 +98,8 @@ review. Supports three device types selected at runtime:
 - Logging settings and NTP configuration
 
 All device types also export device version and model info, currently
-logged-in users, and a MANIFEST for chain-of-custody documentation.
+logged-in users, and a MANIFEST with a SHA-256 hash of every file for
+chain-of-custody documentation.
 
 Scripts available for: **PowerShell** (requires Posh-SSH module)
 
@@ -273,8 +274,15 @@ is expected behavior and does not indicate a security issue with the export.
 
 **What to do with the output**: Hand the entire timestamped output folder to
 your PCI assessor. Do not modify or delete any files from the folder. Each
-folder includes a MANIFEST file that lists all exported files and timestamps
-for chain-of-custody purposes.  New version will have a hash value for integrity purposes.
+folder includes a MANIFEST file that lists every exported file with its size,
+its SHA-256 hash, and the export timestamp for chain-of-custody purposes. A
+`checksums.sha256` file is written alongside it so the assessor can confirm
+nothing was altered after collection:
+
+```
+sha256sum -c checksums.sha256          # run from inside the export folder
+certutil -hashfile <file> SHA256       # single file, on Windows
+```
 
 **After the assessment**: Delete or securely archive all output folders. They
 contain full device configurations which are sensitive. Revoke or disable any

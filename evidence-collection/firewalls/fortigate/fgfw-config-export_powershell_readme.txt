@@ -23,7 +23,9 @@ Two types of output are produced:
                            to navigate than the flat config file and can be
                            opened in VS Code, Notepad++, or a browser.
 
-A MANIFEST.txt is also created listing all files, sizes, and who ran the export.
+A MANIFEST.txt is also created listing all files, their sizes, a SHA-256 hash of
+each file, and who ran the export. A checksums.sha256 file is written alongside
+it so an assessor can verify every file at once (sha256sum -c checksums.sha256).
 
 
 REQUIREMENTS
@@ -158,8 +160,29 @@ admin-accounts.json           Administrator accounts, access profiles, trusted h
 logging-syslog.json           Syslog server settings: IP, port, facility, severity.
 ntp.json                      NTP server settings and sync status.
 
-MANIFEST.txt                  List of all files with sizes, export timestamp, username,
-                              and hostname. Useful for chain-of-custody documentation.
+MANIFEST.txt                  Chain-of-custody record: export timestamp (local and
+                              UTC), username, hostname, and the SHA-256 hash and size
+                              of every file.
+
+checksums.sha256              SHA-256 hash of every exported file, in the standard
+                              "<hash> *<filename>" format for bulk verification.
+
+
+VERIFYING EVIDENCE INTEGRITY
+----------------------------
+The assessor (or anyone) can confirm the files have not been altered since
+collection using the hashes in the MANIFEST or checksums.sha256:
+
+  Verify a single file's hash matches the MANIFEST:
+    Windows : certutil -hashfile full-config.txt SHA256
+    PowerShell: Get-FileHash full-config.txt -Algorithm SHA256
+
+  Verify all files at once against checksums.sha256:
+    Linux/macOS : sha256sum -c checksums.sha256
+    (run from inside the export folder)
+
+If any hash does not match, the file was modified after collection — do not
+rely on it; re-run the export against the firewall.
 
 
 HOW TO REVIEW THE FILES ON WINDOWS
