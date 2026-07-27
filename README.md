@@ -193,19 +193,57 @@ PowerShell Remoting)
 
 ---
 
-#### Linux *(Coming Soon)*
+#### Linux
 
-Will export Linux host configuration relevant to PCI DSS system hardening
-and access control reviews, including:
+Exports Linux host configuration relevant to PCI DSS system hardening, access
+control, and logging reviews. Runs against the local machine, or against a list
+of hosts (one hostname per line in a text file) over SSH from a single admin
+workstation — no need to log in to each server. Pure bash with standard
+coreutils; nothing to install on either side. Covers:
 
-- Local user accounts, sudo rights, and group memberships
-- Password policy settings (PAM configuration)
-- SSH daemon configuration
-- iptables / nftables / firewalld rules
-- Installed packages and patch status
-- Running services (systemd units)
-- Cron jobs and scheduled tasks
-- Syslog and auditd configuration
+- Local user accounts with password status and aging metadata (`/etc/passwd` +
+  `/etc/shadow`), group membership (both secondary *and* primary members), and
+  privileged accounts (UID 0, empty passwords, wheel/sudo/adm)
+- `sudo` configuration from `/etc/sudoers` and `/etc/sudoers.d`, with every
+  `NOPASSWD` entry called out
+- Password policy (`login.defs`, `pwquality`, `chage`), the PAM stacks that
+  actually enforce it, and account lockout (`pam_faillock` / `pam_tally2`)
+- auditd rules as actually loaded (`auditctl -l`), syslog/journald configuration,
+  remote log forwarding targets, and logrotate retention
+- Firewall rules from every backend present: firewalld, ufw, nftables,
+  iptables/ip6tables
+- Installed packages, outstanding updates (security updates listed separately),
+  update history, and pending-reboot state
+- systemd services with boot and running state, the run-as user and command of
+  each running service, cron jobs, and timers
+- Listening ports with owning process, network configuration, and effective SSH
+  server configuration (`sshd -T`) including `authorized_keys` per account
+- SELinux / AppArmor status, anti-malware agents and signature age, and file
+  integrity monitoring tooling (AIDE / Tripwire / Wazuh)
+- Filesystem mounts and options, LUKS encryption, SUID/SGID binaries, and
+  world-writable files
+- Time synchronization (chrony / ntpd / timesyncd), login history, and banners
+- A **hardening scorecard** (`hardening-checks.csv`) giving current vs.
+  recommended values for SSH, password policy, and kernel sysctls, each with its
+  PCI DSS reference — the file to read first
+
+Each host gets its own timestamped evidence folder under a single run folder.
+Every exported file is hashed with SHA-256, and each host folder carries its own
+MANIFEST recording the collection date, the account used on the target, whether
+it ran as root, the workstation that retrieved and hashed the bundle, and each
+file's integrity hash. A separate `checksums.sha256` file allows independent
+verification. Output is a mix of CSV (spreadsheet-ready) and plain text.
+
+Run as root (or with an account that has passwordless `sudo`) for a complete
+export. Without those privileges it still runs, warns you, and labels every item
+it could not read — an incomplete collection is never silent. Password hashes are
+never written to any output file.
+
+For remote collection the script streams a copy of itself to the target over
+SSH, runs it there, and receives the evidence back as a tar stream; the
+temporary copy and staging directory are always removed from the target.
+
+Scripts available for: **Bash** (local run, or remote over SSH)
 
 ---
 
