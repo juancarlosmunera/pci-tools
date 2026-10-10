@@ -247,6 +247,53 @@ Scripts available for: **Bash** (local run, or remote over SSH)
 
 ---
 
+#### macOS
+
+Exports macOS configuration relevant to PCI DSS system hardening, access
+control, and logging reviews. Runs against the local Mac, or against a list of
+Macs over SSH from a single admin machine. Written for the bash 3.2 and BSD
+userland that ship with macOS — nothing to install on either side. Covers:
+
+- Local accounts from Directory Services with admin rights, hidden status,
+  password age, failed login count, secure token status, and last login
+- Groups and membership (admin, wheel, `com.apple.access_ssh`), UID 0 accounts,
+  whether root is enabled, and `sudo` configuration with `NOPASSWD` called out
+- Password policy from `pwpolicy`, screen lock settings, guest access, and
+  automatic login
+- **FileVault** disk encryption status, unlock-enabled users, and institutional
+  recovery key (Req 3.5.1)
+- **Application Firewall** global state, block-all, stealth mode, logging, and
+  per-app exceptions, plus the `pf` packet filter
+- **System Integrity Protection**, Gatekeeper, XProtect/MRT versions, secure
+  boot policy, kernel extensions, and system extensions
+- **Configuration profiles and MDM enrolment** — where a profile enforces a
+  control, it overrides local preferences and is the authoritative evidence
+- Installed applications with code signing state, package receipts, install
+  history, available updates, and automatic update settings
+- launchd daemons and agents with Apple vs. third-party distinguished, sharing
+  services, and per-user login items
+- Listening ports with owning process, network configuration, and effective
+  `sshd` configuration including `authorized_keys` per account
+- Unified logging configuration, OpenBSM audit settings, login history, failed
+  authentications, and `sudo` usage
+- SUID/SGID binaries across both the system and data volumes, world-writable
+  directories, time synchronization, and login banners
+- A **hardening scorecard** (`hardening-checks.csv`) giving current vs.
+  recommended values with PCI DSS references — the file to read first
+
+Each host gets its own timestamped evidence folder under a single run folder,
+with the same SHA-256 MANIFEST and `checksums.sha256` as every other collector.
+
+Two macOS-specific notes the readme covers in full: unified logging rotates by
+**size, not age**, so meeting Req 10.5.1's 12-month retention normally requires
+forwarding logs off the host; and macOS privacy protection (TCC) blocks some
+reads even for root unless Terminal — or `sshd`, for remote runs — is granted
+**Full Disk Access**.
+
+Scripts available for: **Bash** (local run, or remote over SSH)
+
+---
+
 ### Cloud Service Providers
 
 #### Amazon Web Services
