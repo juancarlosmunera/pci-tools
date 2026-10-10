@@ -47,7 +47,7 @@ Captures everything needed for a PCI DSS network security control review:
 - NTP configuration
 
 Output includes both a complete plain-text configuration file and individual
-structured JSON files per table — making it easy to search the full config or
+structured JSON files per table, making it easy to search the full config or
 jump directly to a specific section (e.g., open firewall-policies.json to
 review only the rulebase).
 
@@ -65,10 +65,10 @@ policy rulebase for assessor review. Covers:
 - Address objects and address groups (resolved to actual IPs/subnets)
 - Service objects and service groups (resolved to protocol/port)
 - Each firewall rule flattened to source IP, destination IP, protocol, port,
-  and action — ready for direct assessor review without needing to cross-
+  and action, ready for direct assessor review without needing to cross-
   reference object definitions manually
 
-Output formats include XML (full config), JSON, CSV, and Excel — providing
+Output formats include XML (full config), JSON, CSV, and Excel, providing
 flexibility depending on how the assessor prefers to work.
 
 Scripts available for: **Python** | **PowerShell**
@@ -114,18 +114,18 @@ network security configuration across all resource groups and regions in the
 subscription. Supports both interactive browser login and Service Principal
 (non-interactive) authentication.
 
-- Network Security Group rules — inbound and outbound, custom and Azure
+- Network Security Group rules: inbound and outbound, custom and Azure
   default rules, sorted by direction then priority (the order Azure evaluates
   them), with source, destination, protocol, port range, and allow/deny action
 - NSG-to-subnet and NSG-to-NIC associations embedded in each NSG entry
-- Virtual Network topology — VNet address spaces, all subnets with their CIDR
+- Virtual Network topology: VNet address spaces, all subnets with their CIDR
   blocks, and per-subnet NSG and route table associations
 - VNet peering connections (embedded in VNet export)
 - Route tables with full route entries and next-hop details
 - VPN and ExpressRoute gateways and connections
 - Application Security Groups (for resolving ASG references in NSG rules)
 - Azure Firewall instances, policies, and policy rule collection groups
-  (application, network, and DNAT rules) — exported if deployed, documented
+  (application, network, and DNAT rules), exported if deployed, documented
   as not deployed if absent
 
 Scripts available for: **PowerShell**
@@ -139,16 +139,16 @@ network security configuration for a specified region. Supports access key
 authentication, named AWS profiles, and the default credential chain (instance
 roles, environment variables).
 
-- Security Group rules — inbound and outbound for all groups, with protocol,
+- Security Group rules: inbound and outbound for all groups, with protocol,
   port range, CIDR block, and cross-security-group references
-- Network ACL rules — all NACLs with subnet associations, rules sorted in
+- Network ACL rules: all NACLs with subnet associations, rules sorted in
   evaluation priority order (lowest rule number first), with allow/deny action
   and direction
-- VPC structure — VPC definitions, all subnets with availability zone and
+- VPC structure: VPC definitions, all subnets with availability zone and
   CIDR, route tables with full route entries and subnet associations
 - Internet gateways, NAT gateways, and VPC peering connections
 - AWS Network Firewall instances, policies, and stateless/stateful rule groups
-  (5-tuple rules, Suricata IDS rules, domain lists) — exported if deployed,
+  (5-tuple rules, Suricata IDS rules, domain lists), exported if deployed,
   documented as not deployed if absent
 
 Scripts available for: **PowerShell**
@@ -162,8 +162,8 @@ Scripts available for: **PowerShell**
 Exports Windows operating system configuration relevant to PCI DSS system
 hardening, access control, and logging reviews. Runs against the local machine,
 or against a list of remote hosts (one hostname per line in a text file) over
-PowerShell Remoting from a single admin workstation — no need to log on to each
-server. Uses only built-in Windows tooling — no external modules to install.
+PowerShell Remoting from a single admin workstation, with no need to log on to each
+server. Uses only built-in Windows tooling, with no external modules to install.
 Covers:
 
 - Local user accounts with password and last-logon metadata, and local group
@@ -198,7 +198,7 @@ PowerShell Remoting)
 Exports Linux host configuration relevant to PCI DSS system hardening, access
 control, and logging reviews. Runs against the local machine, or against a list
 of hosts (one hostname per line in a text file) over SSH from a single admin
-workstation — no need to log in to each server. Pure bash with standard
+workstation, with no need to log in to each server. Pure bash with standard
 coreutils; nothing to install on either side. Covers:
 
 - Local user accounts with password status and aging metadata (`/etc/passwd` +
@@ -225,7 +225,7 @@ coreutils; nothing to install on either side. Covers:
 - Time synchronization (chrony / ntpd / timesyncd), login history, and banners
 - A **hardening scorecard** (`hardening-checks.csv`) giving current vs.
   recommended values for SSH, password policy, and kernel sysctls, each with its
-  PCI DSS reference — the file to read first
+  PCI DSS reference, and is the file to read first
 
 Each host gets its own timestamped evidence folder under a single run folder.
 Every exported file is hashed with SHA-256, and each host folder carries its own
@@ -236,7 +236,7 @@ verification. Output is a mix of CSV (spreadsheet-ready) and plain text.
 
 Run as root (or with an account that has passwordless `sudo`) for a complete
 export. Without those privileges it still runs, warns you, and labels every item
-it could not read — an incomplete collection is never silent. Password hashes are
+it could not read, so an incomplete collection is never silent. Password hashes are
 never written to any output file.
 
 For remote collection the script streams a copy of itself to the target over
@@ -252,7 +252,7 @@ Scripts available for: **Bash** (local run, or remote over SSH)
 Exports macOS configuration relevant to PCI DSS system hardening, access
 control, and logging reviews. Runs against the local Mac, or against a list of
 Macs over SSH from a single admin machine. Written for the bash 3.2 and BSD
-userland that ship with macOS — nothing to install on either side. Covers:
+userland that ship with macOS, with nothing to install on either side. Covers:
 
 - Local accounts from Directory Services with admin rights, hidden status,
   password age, failed login count, secure token status, and last login
@@ -266,7 +266,7 @@ userland that ship with macOS — nothing to install on either side. Covers:
   per-app exceptions, plus the `pf` packet filter
 - **System Integrity Protection**, Gatekeeper, XProtect/MRT versions, secure
   boot policy, kernel extensions, and system extensions
-- **Configuration profiles and MDM enrolment** — where a profile enforces a
+- **Configuration profiles and MDM enrolment**: where a profile enforces a
   control, it overrides local preferences and is the authoritative evidence
 - Installed applications with code signing state, package receipts, install
   history, available updates, and automatic update settings
@@ -279,7 +279,7 @@ userland that ship with macOS — nothing to install on either side. Covers:
 - SUID/SGID binaries across both the system and data volumes, world-writable
   directories, time synchronization, and login banners
 - A **hardening scorecard** (`hardening-checks.csv`) giving current vs.
-  recommended values with PCI DSS references — the file to read first
+  recommended values with PCI DSS references, and is the file to read first
 
 Each host gets its own timestamped evidence folder under a single run folder,
 with the same SHA-256 MANIFEST and `checksums.sha256` as every other collector.
@@ -287,7 +287,7 @@ with the same SHA-256 MANIFEST and `checksums.sha256` as every other collector.
 Two macOS-specific notes the readme covers in full: unified logging rotates by
 **size, not age**, so meeting Req 10.5.1's 12-month retention normally requires
 forwarding logs off the host; and macOS privacy protection (TCC) blocks some
-reads even for root unless Terminal — or `sshd`, for remote runs — is granted
+reads even for root unless Terminal (or `sshd`, for remote runs) is granted
 **Full Disk Access**.
 
 Scripts available for: **Bash** (local run, or remote over SSH)
@@ -304,7 +304,7 @@ for global services (IAM, S3, CloudTrail) and at the specified region
 for regional services (Config, GuardDuty, Security Hub). Run once per
 region where regional services are active.
 
-- IAM credential report — the primary evidence file: every IAM user with
+- IAM credential report: the primary evidence file: every IAM user with
   MFA enrollment status, password last used, access key ages, and access
   key last-used dates, exported as a CSV ready to open in Excel
 - IAM password policy with all complexity, length, history, and expiry settings
@@ -316,7 +316,7 @@ region where regional services are active.
   and S3 delivery target per trail
 - S3 bucket inventory with public access block configuration, bucket policy,
   AWS public-status evaluation, access logging target, and versioning
-  per bucket — identifies any bucket with public exposure
+  per bucket, identifying any bucket with public exposure
 - AWS Config recorder status, all configured rules, and per-rule compliance
   results showing which resources are NON_COMPLIANT
 - GuardDuty detector settings and all active findings (if enabled)
@@ -342,7 +342,7 @@ supports interactive sign-in and Service Principal authentication. Covers:
 - Storage and Key Vault security settings
 - Microsoft Defender for Cloud and Azure Policy compliance status
 - A **scorecard** (`pci-checks.csv`) mapping results to PCI DSS
-  requirements — the file to read first
+  requirements, and is the file to read first
 
 Output is saved to a timestamped folder with the same SHA-256 MANIFEST and
 `checksums.sha256` as every other collector. Some items depend on Entra ID
