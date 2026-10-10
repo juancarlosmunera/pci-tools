@@ -329,47 +329,24 @@ Scripts available for: **PowerShell**
 
 #### Microsoft Azure
 
-Connects to Microsoft Entra ID (through Microsoft Graph) and to Azure Resource
-Manager and exports identity, access, and logging configuration for PCI DSS
-control review. One run covers the tenant plus every subscription listed (or
-every subscription the account can see). Supports interactive sign-in and
-Service Principal authentication.
+Collects configuration evidence from Microsoft Entra ID and Azure to
+support a PCI DSS assessment of identity, access, and logging controls.
+The script is **read-only**: it only reads settings and makes no changes to
+Entra ID or Azure. It requires only read-only roles and permissions, and
+supports interactive sign-in and Service Principal authentication. Covers:
 
-- **Entra ID user summary** — the primary identity evidence file: every user
-  with enabled state, member/guest, last successful sign-in and days inactive,
-  MFA registration and methods, password age, and admin roles held, exported
-  as a CSV ready to open in Excel
-- Directory role assignments, active and PIM-eligible, with expiry dates, plus
-  the members of every group that holds an admin role
-- PIM activation settings per role (MFA, approval, justification, maximum
-  duration)
-- Conditional Access policies with user, group, role, app, and location IDs
-  resolved to names; security defaults; authentication methods policy; smart
-  lockout; and domain password expiry
-- App registration secrets and certificates with validity dates (secret values
-  are never exported)
-- Entra ID sign-in and audit log export settings (Entra ID itself keeps these
-  logs 30 days at most)
-- Azure RBAC role assignments, active and PIM-eligible, at every level from
-  management group down to single resources, with principal names; custom
-  roles; and members of groups holding privileged roles
-- Activity log export, diagnostic settings for security-relevant resources,
-  Log Analytics retention per table, and SQL server auditing
-- Storage account access settings (anonymous access, network exposure, HTTPS
-  and minimum TLS) and every blob container that is readable anonymously
-- Key Vault soft delete, purge protection, and network exposure
-- Microsoft Defender for Cloud plans, security contacts, secure score,
-  unhealthy recommendations, and per-control PCI DSS results (if the standard
-  is assigned)
-- Azure Policy assignments and every non-compliant resource
-- A **scorecard** (`pci-checks.csv`) giving current vs. expected values with
-  PCI DSS references — the file to read first
+- Multi-factor authentication and account management settings
+- Administrative role and access control configuration
+- Conditional Access and authentication policies
+- Logging and log retention configuration
+- Storage and Key Vault security settings
+- Microsoft Defender for Cloud and Azure Policy compliance status
+- A **scorecard** (`pci-checks.csv`) mapping results to PCI DSS
+  requirements — the file to read first
 
-Tenant data and each subscription get their own subfolder under one timestamped
-folder, with the same SHA-256 MANIFEST and `checksums.sha256` as every other
-collector. Items that need Entra ID P1/P2 (sign-in dates, MFA registration,
-Conditional Access, PIM) are reported as not collected — with the reason —
-when the tenant is not licensed for them, rather than silently omitted.
+Output is saved to a timestamped folder with the same SHA-256 MANIFEST and
+`checksums.sha256` as every other collector. Some items depend on Entra ID
+licensing; anything that cannot be collected is noted in the output.
 
 Scripts available for: **PowerShell**
 
