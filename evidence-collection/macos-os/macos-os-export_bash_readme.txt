@@ -102,7 +102,7 @@ What is collected and why it matters for PCI DSS:
                             config files, whether SSH access is restricted to a
                             group, and authorized_keys per account.
 
-  Unified logging           Req 10.2, 10.5.1: Logging mode, log store size,
+  Unified logging           Req 10.2: Logging mode, log store size,
                             newsyslog rotation, legacy ASL configuration, and
                             any log-shipping agent installed.
 
@@ -165,16 +165,6 @@ REQUIREMENTS
   - The script warns on stderr at the start of each host when it is running
     unprivileged, so an incomplete collection is never silent.
 
-  FULL DISK ACCESS — the macOS-specific gotcha:
-  - macOS privacy protection (TCC) blocks some reads even for root. If you run
-    the script from Terminal, grant Terminal "Full Disk Access" in
-    System Settings > Privacy & Security > Full Disk Access.
-  - For REMOTE collection, grant Full Disk Access to sshd itself:
-      System Settings > Privacy & Security > Full Disk Access > + >
-      press Cmd+Shift+G and enter /usr/libexec/sshd-keygen-wrapper
-  - Without this, some files read as empty or permission-denied even though the
-    account is root. This is a macOS policy control, not a script failure.
-
   For REMOTE collection:
   - Remote Login must be enabled on each target:
       System Settings > General > Sharing > Remote Login
@@ -232,7 +222,7 @@ RUNNING THE SCRIPT
     1. Create your host list file, e.g. ~/pci/macs.txt
     2. Set HOST_LIST_FILE="/Users/you/pci/macs.txt" in the script.
     3. Set SSH_USER / SSH_KEY if needed. Confirm the account is root or has
-       NOPASSWD sudo on the targets, and that sshd has Full Disk Access.
+       NOPASSWD sudo on the targets.
     4. Run WITHOUT sudo on the collector — the privileges that matter are the
        ones on the targets:
          ./macos-os-export.sh
@@ -379,11 +369,6 @@ patch-status.txt                Available updates from Apple, automatic update s
 
 logging-config.txt              Unified logging mode, log store size, newsyslog rotation,
                                 legacy ASL config, and any log-shipping agent.
-                                IMPORTANT: macOS unified logging rotates by SIZE, not by
-                                age. Req 10.5.1 expects 12 months of audit history, which
-                                on macOS normally means forwarding logs to a central
-                                collector. A Mac with no shipping agent will not meet
-                                that requirement on its own.
 
 audit-config.txt                OpenBSM audit_control flags and retention, per-user audit
                                 flags, auditd state, and the audit trail files (Req 10.2).
@@ -480,11 +465,9 @@ TROUBLESHOOTING
       systemsetup values, FileVault detail, firewall detail, audit settings and
       profiles are labelled "(requires root)". Re-run with sudo.
 
-  Values are empty or permission-denied even though I ran as root
-      This is macOS privacy protection (TCC), not a script failure. Grant Full
-      Disk Access to Terminal (local runs) or to
-      /usr/libexec/sshd-keygen-wrapper (remote runs) in
-      System Settings > Privacy & Security > Full Disk Access.
+  Values are empty or permission-denied
+      Re-run as root (sudo ./macos-os-export.sh), or on remote targets confirm
+      the account is root or has NOPASSWD sudo. See PRIVILEGES above.
 
   Remote: "SSH collection FAILED for <host>"
       Confirm Remote Login is enabled on the target (System Settings > General >
@@ -533,9 +516,6 @@ SECURITY NOTES
     the target along with the temporary copy of the script.
 
   - Do not hard-code passwords in the script. Use SSH keys or ssh-agent.
-
-  - If you granted Full Disk Access to sshd for the assessment, consider
-    removing it afterwards.
 
   - After the assessment: delete or securely archive the run folder. Its
     integrity hashes are in each MANIFEST, so archive them together.

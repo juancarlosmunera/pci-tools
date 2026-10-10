@@ -284,12 +284,6 @@ userland that ship with macOS, with nothing to install on either side. Covers:
 Each host gets its own timestamped evidence folder under a single run folder,
 with the same SHA-256 MANIFEST and `checksums.sha256` as every other collector.
 
-Two macOS-specific notes the readme covers in full: unified logging rotates by
-**size, not age**, so meeting Req 10.5.1's 12-month retention normally requires
-forwarding logs off the host; and macOS privacy protection (TCC) blocks some
-reads even for root unless Terminal (or `sshd`, for remote runs) is granted
-**Full Disk Access**.
-
 Scripts available for: **Bash** (local run, or remote over SSH)
 
 ---

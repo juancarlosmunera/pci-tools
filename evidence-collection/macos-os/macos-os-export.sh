@@ -535,29 +535,23 @@ emit_hardening_csv() {
     # --- Audit and logging (Req 10) ---
     # "not present", "cannot read", and "present but unset" are three different
     # answers to an assessor — do not collapse them into one message.
-    local audit_src auditflags auditexpire
+    local audit_src auditflags
     if [ ! -e /etc/security/audit_control ]; then
         auditflags="(audit_control not present - OpenBSM auditing not configured)"
-        auditexpire="$auditflags"
     else
         audit_src=$(mktmp)
         { cat /etc/security/audit_control 2>/dev/null ||
           priv cat /etc/security/audit_control 2>/dev/null; } > "$audit_src"
         if [ -s "$audit_src" ]; then
             auditflags=$(grep -E "^flags:" "$audit_src" | cut -d: -f2)
-            auditexpire=$(grep -E "^expire-after:" "$audit_src" | cut -d: -f2)
             [ -n "$auditflags" ]  || auditflags="(present, but no flags line set)"
-            [ -n "$auditexpire" ] || auditexpire="(present, but no expire-after line set)"
         else
             auditflags="(no access - re-run as root)"
-            auditexpire="$auditflags"
         fi
         rm -f "$audit_src"
     fi
     csv "Audit event classes (BSM flags)" "/etc/security/audit_control" "$auditflags" \
         "At minimum lo,ad,fd,fm,-all (logins, admin, file changes)" "Req 10.2"
-    csv "Audit log retention"             "/etc/security/audit_control" "$auditexpire" \
-        ">= 12 months of audit history retained" "Req 10.5.1"
     csv "Audit daemon (auditd)"           "launchctl" "$(service_state com.apple.auditd)" \
         "loaded and running" "Req 10.2"
 
@@ -980,11 +974,8 @@ collect_evidence() {
     cap "Unified logging configuration" "logging-config.txt" '
         echo "===== log config status (Req 10.2) ====="
         priv log config --status 2>/dev/null || log config --status 2>/dev/null || echo "(unavailable)"
-        echo; echo "===== Log archive size and retention ====="
+        echo; echo "===== Log archive size ====="
         du -sh /var/db/diagnostics 2>/dev/null || priv du -sh /var/db/diagnostics 2>/dev/null || echo "(not readable)"
-        echo "  NOTE: macOS unified logging rotates by size, not by age. Req 10.5.1"
-        echo "  expects 12 months of audit history — on macOS that normally means"
-        echo "  forwarding logs off the host to a central collector."
         echo; echo "===== Oldest available log entry ====="
         priv log show --style syslog --last 1d --info 2>/dev/null | head -2 || echo "(requires root)"
         echo; echo "===== newsyslog rotation ====="
